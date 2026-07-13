@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+:root {
+  --navy: #0f1119;
+  --surface: #171a26;
+  --surface-2: #1e2233;
+  --blue: #3a5ba8;
+  --blue-deep: #22335e;
+  --red: #c6222f;
+  --gold: #c9a24b;
+  --ivory: #f3efe6;
+  --ivory-dim: #c9c6be;
+  --line: rgba(243, 239, 230, 0.1);
+
+  --font-display: var(--font-fraunces);
+  --font-body: var(--font-inter);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--navy);
+  color: var(--ivory);
+  font-family: var(--font-body), sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display), serif;
+}

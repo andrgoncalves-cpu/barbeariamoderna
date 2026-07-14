@@ -62,17 +62,20 @@ function getTimeZoneOffsetMinutes(approx: Date, timeZone: string): number {
   return (asUTC - approx.getTime()) / 60000;
 }
 
-/** Constrói um timestamp RFC3339 válido (com offset) a partir de uma data/hora local em Lisboa. */
+/** Constrói um timestamp RFC3339 válido (com offset) a partir de uma data/hora local em Lisboa.
+ *  Aceita "HH:mm" ou "HH:mm:ss" (o Postgres devolve horas com segundos). */
 function toRFC3339Lisbon(dateISO: string, time: string): string {
   const [y, mo, d] = dateISO.split('-').map(Number);
-  const [h, m] = time.split(':').map(Number);
+  const [h, m] = time.split(':').map(Number); // ignora segundos se existirem
+  const hh = String(h).padStart(2, '0');
+  const mm = String(m).padStart(2, '0');
   const approx = new Date(Date.UTC(y, mo - 1, d, h, m, 0));
   const offsetMin = getTimeZoneOffsetMinutes(approx, 'Europe/Lisbon');
   const sign = offsetMin >= 0 ? '+' : '-';
   const abs = Math.abs(offsetMin);
   const oh = String(Math.floor(abs / 60)).padStart(2, '0');
   const om = String(abs % 60).padStart(2, '0');
-  return `${dateISO}T${time}:00${sign}${oh}:${om}`;
+  return `${dateISO}T${hh}:${mm}:00${sign}${oh}:${om}`;
 }
 function calendarIdFor(barberId: string): string | undefined {
   if (barberId === 'andre') return process.env.CALENDAR_ID_ANDRE;

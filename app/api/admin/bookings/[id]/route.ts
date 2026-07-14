@@ -29,28 +29,36 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       .update({ payment_status: 'confirmed', status: 'confirmed' })
       .eq('id', id);
 
-    const eventId = await createGoogleEvent({
-      barberId: booking.barber_id,
-      summary: `${booking.services?.name} — ${booking.customer_name}`,
-      description: `Telefone: ${booking.customer_phone}\nPreço: ${booking.price}€`,
-      dateISO: booking.date,
-      startTime: booking.start_time,
-      endTime: booking.end_time,
-    });
-    if (eventId) {
-      await supabase.from('bookings').update({ google_event_id: eventId }).eq('id', id);
+    try {
+      const eventId = await createGoogleEvent({
+        barberId: booking.barber_id,
+        summary: `${booking.services?.name} — ${booking.customer_name}`,
+        description: `Telefone: ${booking.customer_phone}\nPreço: ${booking.price}€`,
+        dateISO: booking.date,
+        startTime: booking.start_time,
+        endTime: booking.end_time,
+      });
+      if (eventId) {
+        await supabase.from('bookings').update({ google_event_id: eventId }).eq('id', id);
+      }
+    } catch (err) {
+      console.error('Erro ao criar evento no Google Calendar:', err);
     }
 
-    await sendBookingConfirmationEmail({
-      to: booking.customer_email,
-      customerName: booking.customer_name,
-      barberName: booking.barbers?.name ?? '',
-      serviceName: booking.services?.name ?? '',
-      dateFormatted: formatDatePT(booking.date),
-      time: booking.start_time,
-      price: booking.price,
-      cancelUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/cancelar?token=${booking.cancel_token}`,
-    });
+    try {
+      await sendBookingConfirmationEmail({
+        to: booking.customer_email,
+        customerName: booking.customer_name,
+        barberName: booking.barbers?.name ?? '',
+        serviceName: booking.services?.name ?? '',
+        dateFormatted: formatDatePT(booking.date),
+        time: booking.start_time,
+        price: booking.price,
+        cancelUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/cancelar?token=${booking.cancel_token}`,
+      });
+    } catch (err) {
+      console.error('Erro ao enviar email de confirmação:', err);
+    }
 
     return NextResponse.json({ success: true });
   }

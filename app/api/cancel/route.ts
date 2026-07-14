@@ -65,12 +65,16 @@ export async function POST(req: NextRequest) {
   }
 
   const [y, m, d] = booking.date.split('-');
-  await sendCancellationEmail({
-    to: booking.customer_email,
-    customerName: booking.customer_name,
-    dateFormatted: `${d}/${m}/${y}`,
-    time: booking.start_time,
-  });
+  try {
+    await sendCancellationEmail({
+      to: booking.customer_email,
+      customerName: booking.customer_name,
+      dateFormatted: `${d}/${m}/${y}`,
+      time: booking.start_time,
+    });
+  } catch (err) {
+    console.error('Erro ao enviar email de cancelamento:', err);
+  }
 
   return NextResponse.json({ success: true });
 }

@@ -94,36 +94,48 @@ export async function POST(req: NextRequest) {
   const cancelUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/cancelar?token=${booking.cancel_token}`;
 
   if (exempt) {
-    const eventId = await createGoogleEvent({
-      barberId,
-      summary: `${service.name} — ${name}`,
-      description: `Telefone: ${phone}\nServiço: ${service.name}\nPreço: ${service.price}€`,
-      dateISO: date,
-      startTime: time,
-      endTime,
-    });
-    if (eventId) {
-      await supabase.from('bookings').update({ google_event_id: eventId }).eq('id', booking.id);
+    try {
+      const eventId = await createGoogleEvent({
+        barberId,
+        summary: `${service.name} — ${name}`,
+        description: `Telefone: ${phone}\nServiço: ${service.name}\nPreço: ${service.price}€`,
+        dateISO: date,
+        startTime: time,
+        endTime,
+      });
+      if (eventId) {
+        await supabase.from('bookings').update({ google_event_id: eventId }).eq('id', booking.id);
+      }
+    } catch (err) {
+      console.error('Erro ao criar evento no Google Calendar (marcação já foi criada):', err);
     }
 
-    await sendBookingConfirmationEmail({
-      to: email,
-      customerName: name,
-      barberName: barber.name,
-      serviceName: service.name,
-      dateFormatted: formatDatePT(date),
-      time,
-      price: service.price,
-      cancelUrl,
-    });
+    try {
+      await sendBookingConfirmationEmail({
+        to: email,
+        customerName: name,
+        barberName: barber.name,
+        serviceName: service.name,
+        dateFormatted: formatDatePT(date),
+        time,
+        price: service.price,
+        cancelUrl,
+      });
+    } catch (err) {
+      console.error('Erro ao enviar email de confirmação (marcação já foi criada):', err);
+    }
   } else {
-    await sendPendingPaymentEmail({
-      to: email,
-      customerName: name,
-      amount: prepaymentAmount,
-      paymentLink: prepaymentLink,
-      holdMinutes,
-    });
+    try {
+      await sendPendingPaymentEmail({
+        to: email,
+        customerName: name,
+        amount: prepaymentAmount,
+        paymentLink: prepaymentLink,
+        holdMinutes,
+      });
+    } catch (err) {
+      console.error('Erro ao enviar email de pré-pagamento (marcação já foi criada):', err);
+    }
   }
 
   return NextResponse.json({

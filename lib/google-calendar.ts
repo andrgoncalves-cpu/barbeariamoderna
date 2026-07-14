@@ -131,14 +131,16 @@ export async function createGoogleEvent(params: {
 
   try {
     const cal = calendarClient();
+    const requestBody = {
+      summary: params.summary,
+      description: params.description,
+      start: { dateTime: toRFC3339Lisbon(params.dateISO, params.startTime), timeZone: 'Europe/Lisbon' },
+      end: { dateTime: toRFC3339Lisbon(params.dateISO, params.endTime), timeZone: 'Europe/Lisbon' },
+    };
+    console.log('A criar evento no Google Calendar, corpo do pedido:', JSON.stringify(requestBody));
     const res = await cal.events.insert({
       calendarId,
-      requestBody: {
-        summary: params.summary,
-        description: params.description,
-        start: { dateTime: toRFC3339Lisbon(params.dateISO, params.startTime), timeZone: 'Europe/Lisbon' },
-        end: { dateTime: toRFC3339Lisbon(params.dateISO, params.endTime), timeZone: 'Europe/Lisbon' },
-      },
+      requestBody,
     });
     return res.data.id ?? null;
   } catch (err) {

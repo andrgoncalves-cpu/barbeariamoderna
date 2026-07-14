@@ -142,7 +142,7 @@ export async function createGoogleEvent(params: {
     });
     return res.data.id ?? null;
   } catch (err) {
-    console.error('Erro ao criar evento no Google Calendar:', describeGoogleError(err));
+    console.error(`Erro ao criar evento no Google Calendar (calendarId="${calendarId}"):`, describeGoogleError(err));
     return null;
   }
 }

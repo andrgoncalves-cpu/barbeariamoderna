@@ -23,7 +23,17 @@ function calendarClient() {
   return google.calendar({ version: 'v3', auth: getAuth() });
 }
 
-function calendarIdFor(barberId: string): string | undefined {
+function describeGoogleError(err: unknown): string {
+  const anyErr = err as { response?: { data?: unknown }; message?: string };
+  if (anyErr?.response?.data) {
+    try {
+      return JSON.stringify(anyErr.response.data);
+    } catch {
+      // ignore
+    }
+  }
+  return anyErr?.message ?? String(err);
+}
   if (barberId === 'andre') return process.env.CALENDAR_ID_ANDRE;
   if (barberId === 'rui') return process.env.CALENDAR_ID_RUI;
   return undefined;
@@ -61,7 +71,7 @@ export async function getGoogleBusyIntervals(
       };
     });
   } catch (err) {
-    console.error('Erro ao consultar Google Calendar (freebusy):', err);
+    console.error('Erro ao consultar Google Calendar (freebusy):', describeGoogleError(err));
     // Em caso de falha da API, não bloqueia o site — apenas ignora o cruzamento.
     return [];
   }
@@ -91,7 +101,7 @@ export async function createGoogleEvent(params: {
     });
     return res.data.id ?? null;
   } catch (err) {
-    console.error('Erro ao criar evento no Google Calendar:', err);
+    console.error('Erro ao criar evento no Google Calendar:', describeGoogleError(err));
     return null;
   }
 }

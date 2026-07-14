@@ -111,3 +111,42 @@ export async function sendCancellationEmail(params: { to: string; customerName: 
     html,
   });
 }
+
+/** Aviso para ti (dono da barbearia) sempre que entra uma marcação nova. */
+export async function sendNewBookingAdminAlert(params: {
+  barberName: string;
+  serviceName: string;
+  customerName: string;
+  customerPhone: string;
+  dateFormatted: string;
+  time: string;
+  price: number;
+  requiresPrepayment: boolean;
+}) {
+  const html = wrapTemplate(
+    'Nova marcação recebida',
+    `
+    <table style="width:100%; font-size:14px;">
+      <tr><td style="color:#9C9A93; padding:4px 0;">Cliente</td><td style="text-align:right;">${params.customerName}</td></tr>
+      <tr><td style="color:#9C9A93; padding:4px 0;">Telefone</td><td style="text-align:right;">${params.customerPhone}</td></tr>
+      <tr><td style="color:#9C9A93; padding:4px 0;">Profissional</td><td style="text-align:right;">${params.barberName}</td></tr>
+      <tr><td style="color:#9C9A93; padding:4px 0;">Serviço</td><td style="text-align:right;">${params.serviceName}</td></tr>
+      <tr><td style="color:#9C9A93; padding:4px 0;">Data</td><td style="text-align:right;">${params.dateFormatted}</td></tr>
+      <tr><td style="color:#9C9A93; padding:4px 0;">Hora</td><td style="text-align:right;">${params.time}</td></tr>
+      <tr><td style="color:#9C9A93; padding:4px 0;">Preço</td><td style="text-align:right; color:${BRAND.gold};">${params.price.toFixed(2)}€</td></tr>
+    </table>
+    <p style="margin-top:20px; font-size:13px; color:${params.requiresPrepayment ? BRAND.gold : '#8FBF8A'};">
+      ${params.requiresPrepayment ? 'Aguarda confirmação de pré-pagamento no backoffice.' : 'Cliente isento — já confirmada automaticamente.'}
+    </p>
+    `
+  );
+
+  const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.EMAIL_USER;
+
+  await getTransporter().sendMail({
+    from: `"${BRAND.name}" <${process.env.EMAIL_USER}>`,
+    to: adminEmail,
+    subject: `Nova marcação — ${params.customerName} (${params.dateFormatted} ${params.time})`,
+    html,
+  });
+}

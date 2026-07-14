@@ -34,6 +34,46 @@ function describeGoogleError(err: unknown): string {
   }
   return anyErr?.message ?? String(err);
 }
+
+/** Devolve o offset (em minutos) do fuso indicado, nessa data/hora aproximada — lida com DST automaticamente. */
+function getTimeZoneOffsetMinutes(approx: Date, timeZone: string): number {
+  const dtf = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+  const parts = dtf.formatToParts(approx).reduce((acc: Record<string, string>, p) => {
+    acc[p.type] = p.value;
+    return acc;
+  }, {});
+  const asUTC = Date.UTC(
+    Number(parts.year),
+    Number(parts.month) - 1,
+    Number(parts.day),
+    Number(parts.hour),
+    Number(parts.minute),
+    Number(parts.second)
+  );
+  return (asUTC - approx.getTime()) / 60000;
+}
+
+/** Constrói um timestamp RFC3339 válido (com offset) a partir de uma data/hora local em Lisboa. */
+function toRFC3339Lisbon(dateISO: string, time: string): string {
+  const [y, mo, d] = dateISO.split('-').map(Number);
+  const [h, m] = time.split(':').map(Number);
+  const approx = new Date(Date.UTC(y, mo - 1, d, h, m, 0));
+  const offsetMin = getTimeZoneOffsetMinutes(approx, 'Europe/Lisbon');
+  const sign = offsetMin >= 0 ? '+' : '-';
+  const abs = Math.abs(offsetMin);
+  const oh = String(Math.floor(abs / 60)).padStart(2, '0');
+  const om = String(abs % 60).padStart(2, '0');
+  return `${dateISO}T${time}:00${sign}${oh}:${om}`;
+}
 function calendarIdFor(barberId: string): string | undefined {
   if (barberId === 'andre') return process.env.CALENDAR_ID_ANDRE;
   if (barberId === 'rui') return process.env.CALENDAR_ID_RUI;
@@ -96,8 +136,8 @@ export async function createGoogleEvent(params: {
       requestBody: {
         summary: params.summary,
         description: params.description,
-        start: { dateTime: `${params.dateISO}T${params.startTime}:00`, timeZone: 'Europe/Lisbon' },
-        end: { dateTime: `${params.dateISO}T${params.endTime}:00`, timeZone: 'Europe/Lisbon' },
+        start: { dateTime: toRFC3339Lisbon(params.dateISO, params.startTime), timeZone: 'Europe/Lisbon' },
+        end: { dateTime: toRFC3339Lisbon(params.dateISO, params.endTime), timeZone: 'Europe/Lisbon' },
       },
     });
     return res.data.id ?? null;

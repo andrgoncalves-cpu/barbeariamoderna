@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { getAvailableSlots } from '@/lib/availability';
 import { getOrCreateCustomer, isPhoneExempt } from '@/lib/customers';
 import { createGoogleEvent } from '@/lib/google-calendar';
-import { sendBookingConfirmationEmail, sendPendingPaymentEmail } from '@/lib/email';
+import { sendBookingConfirmationEmail, sendPendingPaymentEmail, sendNewBookingAdminAlert } from '@/lib/email';
 
 function addMinutes(time: string, minutes: number): string {
   const [h, m] = time.split(':').map(Number);
@@ -136,6 +136,21 @@ export async function POST(req: NextRequest) {
     } catch (err) {
       console.error('Erro ao enviar email de pré-pagamento (marcação já foi criada):', err);
     }
+  }
+
+  try {
+    await sendNewBookingAdminAlert({
+      barberName: barber.name,
+      serviceName: service.name,
+      customerName: name,
+      customerPhone: phone,
+      dateFormatted: formatDatePT(date),
+      time,
+      price: service.price,
+      requiresPrepayment: !exempt,
+    });
+  } catch (err) {
+    console.error('Erro ao enviar aviso ao dono (marcação já foi criada):', err);
   }
 
   return NextResponse.json({

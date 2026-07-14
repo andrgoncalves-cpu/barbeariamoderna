@@ -48,8 +48,8 @@ export async function getGoogleBusyIntervals(
   const calendarId = calendarIdFor(barberId);
   if (!calendarId) return [];
 
-  const timeMin = `${dateISO}T00:00:00`;
-  const timeMax = `${dateISO}T23:59:59`;
+  const timeMin = `${dateISO}T00:00:00Z`;
+  const timeMax = `${dateISO}T23:59:59Z`;
 
   try {
     const cal = calendarClient();

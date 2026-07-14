@@ -34,6 +34,7 @@ function describeGoogleError(err: unknown): string {
   }
   return anyErr?.message ?? String(err);
 }
+function calendarIdFor(barberId: string): string | undefined {
   if (barberId === 'andre') return process.env.CALENDAR_ID_ANDRE;
   if (barberId === 'rui') return process.env.CALENDAR_ID_RUI;
   return undefined;

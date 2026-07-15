@@ -38,7 +38,7 @@ export default function MarcacaoManualPage() {
 
   useEffect(() => {
     if (!barberId || !serviceId || !date) return;
-    fetch(`/api/availability?barberId=${barberId}&serviceId=${serviceId}&date=${date}`)
+    fetch(`/api/availability?barberId=${barberId}&serviceId=${serviceId}&date=${date}&admin=1`)
       .then((r) => r.json())
       .then((d) => setSlots(d.slots ?? []));
   }, [barberId, serviceId, date]);

@@ -1,8 +1,23 @@
 import { supabaseAdmin } from './supabase';
 import { getGoogleBusyIntervals } from './google-calendar';
 
-const GRID_MINUTES = 15;
-const ORPHAN_GAP_MINUTES = 15; // gap "preso" que a regra rígida esconde
+function gcd(a: number, b: number): number {
+  return b === 0 ? a : gcd(b, a % b);
+}
+
+/** Grelha de agendamento = MDC das durações dos serviços ativos do barbeiro (15, 20, etc.). */
+async function getGridMinutesForBarber(barberId: string): Promise<number> {
+  const supabase = supabaseAdmin();
+  const { data: services } = await supabase
+    .from('services')
+    .select('duration_minutes')
+    .eq('barber_id', barberId)
+    .eq('active', true);
+
+  const durations = (services ?? []).map((s: { duration_minutes: number }) => s.duration_minutes);
+  if (durations.length === 0) return 15;
+  return durations.reduce((acc: number, d: number) => gcd(acc, d), durations[0]);
+}
 
 function timeToMinutes(t: string): number {
   const [h, m] = t.split(':').map(Number);
@@ -30,9 +45,13 @@ export async function getAvailableSlots(params: {
   barberId: string;
   serviceId: string;
   dateISO: string; // 'YYYY-MM-DD'
+  ignoreLeadTime?: boolean; // true quando é o backoffice a marcar (walk-in imediato)
 }): Promise<string[]> {
-  const { barberId, serviceId, dateISO } = params;
+  const { barberId, serviceId, dateISO, ignoreLeadTime } = params;
   const supabase = supabaseAdmin();
+
+  const GRID_MINUTES = await getGridMinutesForBarber(barberId);
+  const ORPHAN_GAP_MINUTES = GRID_MINUTES; // gap "preso" que a regra rígida esconde
 
   const date = new Date(`${dateISO}T00:00:00`);
   const dayOfWeek = date.getDay();
@@ -130,6 +149,7 @@ export async function getAvailableSlots(params: {
 
   const isToday = dateISO === now.toISOString().slice(0, 10);
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const MIN_LEAD_MINUTES = 30; // não permite marcar para os próximos 30 minutos
 
   const results: string[] = [];
 
@@ -139,8 +159,9 @@ export async function getAvailableSlots(params: {
       candidateStart + duration <= segment.endMinutes;
       candidateStart += GRID_MINUTES
     ) {
-      // Ignora horários já passados (só relevante se for hoje)
-      if (isToday && candidateStart <= nowMinutes) continue;
+      // Ignora horários já passados ou demasiado próximos (só relevante se for hoje, e não for o backoffice)
+      if (isToday && !ignoreLeadTime && candidateStart < nowMinutes + MIN_LEAD_MINUTES) continue;
+      if (isToday && ignoreLeadTime && candidateStart <= nowMinutes) continue;
 
       const candidate: Interval = {
         startMinutes: candidateStart,

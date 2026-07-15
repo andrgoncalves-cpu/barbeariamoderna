@@ -5,6 +5,7 @@ export async function GET(req: NextRequest) {
   const barberId = req.nextUrl.searchParams.get('barberId');
   const serviceId = req.nextUrl.searchParams.get('serviceId');
   const date = req.nextUrl.searchParams.get('date');
+  const admin = req.nextUrl.searchParams.get('admin') === '1';
 
   if (!barberId || !serviceId || !date) {
     return NextResponse.json(
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const slots = await getAvailableSlots({ barberId, serviceId, dateISO: date });
+    const slots = await getAvailableSlots({ barberId, serviceId, dateISO: date, ignoreLeadTime: admin });
     return NextResponse.json({ slots });
   } catch (err) {
     console.error('Erro em /api/availability:', err);

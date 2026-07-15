@@ -373,6 +373,10 @@ export default function BookingPage() {
                 >
                   Pagar {result.prepaymentAmount.toFixed(2)}€ na Revolut
                 </a>
+                <p className="text-xs text-[var(--ivory-dim)] max-w-[380px] mx-auto mt-6 leading-relaxed">
+                  A barbearia vai confirmar o pagamento e a reserva o mais rápido possível. Se o
+                  pagamento não for identificado, a marcação pode ser cancelada sem aviso prévio.
+                </p>
               </>
             ) : (
               <>

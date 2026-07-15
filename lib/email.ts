@@ -87,6 +87,7 @@ export async function sendPendingPaymentEmail(params: {
       <a href="${params.paymentLink}" style="display:inline-block; background:${BRAND.gold}; color:#171826; text-decoration:none; padding:12px 22px; border-radius:8px; font-size:14px; font-weight:bold;">Pagar ${params.amount.toFixed(2)}€</a>
     </p>
     <p style="font-size:12px; color:#9C9A93; margin-top:16px;">O horário fica reservado durante ${params.holdMinutes} minutos. Após confirmarmos o pagamento, recebe o email de confirmação definitiva.</p>
+    <p style="font-size:12px; color:${BRAND.gold}; margin-top:12px; line-height:1.6;">A barbearia vai confirmar o pagamento e a reserva o mais rápido possível. Se o pagamento não for identificado, a marcação pode ser cancelada sem aviso prévio.</p>
     `
   );
 

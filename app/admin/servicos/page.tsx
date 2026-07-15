@@ -9,6 +9,8 @@ interface ServiceRow {
   duration_minutes: number;
   price: number;
   active: boolean;
+  prepayment_amount: number | null;
+  prepayment_link: string | null;
 }
 
 const BARBERS = [
@@ -100,6 +102,26 @@ export default function ServicosPage() {
                 onChange={(e) => update(s, { active: e.target.checked })}
               />
               Ativo
+            </label>
+            <label className="flex items-center gap-2 text-xs text-[var(--ivory-dim)] w-full mt-1">
+              Pré-pag.
+              <input
+                type="number"
+                step={0.5}
+                placeholder="padrão"
+                value={s.prepayment_amount ?? ''}
+                onChange={(e) =>
+                  update(s, { prepayment_amount: e.target.value === '' ? null : Number(e.target.value) })
+                }
+                className="w-20 px-2 py-1 rounded bg-[var(--surface-2)] border border-[var(--line)] text-sm"
+              />
+              €
+              <input
+                placeholder="Link de pagamento (Revolut)"
+                value={s.prepayment_link ?? ''}
+                onChange={(e) => update(s, { prepayment_link: e.target.value || null })}
+                className="flex-1 min-w-[180px] px-2 py-1 rounded bg-[var(--surface-2)] border border-[var(--line)] text-sm"
+              />
             </label>
           </div>
         ))}

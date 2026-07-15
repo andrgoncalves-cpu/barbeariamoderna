@@ -62,8 +62,8 @@ export async function POST(req: NextRequest) {
   const settingsMap = Object.fromEntries(
     (settings ?? []).map((s: { key: string; value: string }) => [s.key, s.value])
   );
-  const prepaymentAmount = Number(settingsMap.prepayment_amount ?? 2);
-  const prepaymentLink = settingsMap.prepayment_link ?? '';
+  const prepaymentAmount = service.prepayment_amount ?? Number(settingsMap.prepayment_amount ?? 2);
+  const prepaymentLink = service.prepayment_link ?? settingsMap.prepayment_link ?? '';
   const holdMinutes = Number(settingsMap.prepayment_hold_minutes ?? 15);
 
   const { data: booking, error } = await supabase
